@@ -1,0 +1,2 @@
+- Create the configs package (config.go, .env)
+- Create entity (user.go)
