@@ -27,5 +27,4 @@ func (u *User) FindByEmail(email string) (*entity.User, error) {
 	}
 
 	return &user, nil
-
 }

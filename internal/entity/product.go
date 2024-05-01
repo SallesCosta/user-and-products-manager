@@ -18,7 +18,7 @@ var (
 type Product struct {
 	ID        entity.ID `json:"id"`
 	Name      string    `json:"name"`
-	Price     int       `json:"price"`
+	Price     float64   `json:"price"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -42,7 +42,7 @@ func (p *Product) Validate() error {
 	return nil
 }
 
-func NewProduct(name string, price int) (*Product, error) {
+func NewProduct(name string, price float64) (*Product, error) {
 
 	product := &Product{
 		ID:        entity.NewID(),

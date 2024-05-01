@@ -162,7 +162,7 @@ var (
 type Product struct {
 	ID        entity.ID `json:"id"`
 	Name      string    `json:"name"`
-	Price     int       `json:"price"`
+	Price     float64   `json:"price"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -246,3 +246,323 @@ func TestProductValidations_Invalid_Price(t *testing.T) {
 	assert.Equal(t, err, ErrInvalidPrice)
 }
 ```
+
+# Criação das entities no db
+
+```sh
+# root/internal/infra/database/interface.go
+package database
+
+import "github.com/sallescosta/crud-api/internal/entity"
+
+type UserInterface interface {
+	Create(user *entity.User) error
+	FindByEmail(email string) (*entity.User, error)
+}
+
+type ProductInterface interface {
+	Create(product *entity.Product) error
+	FindById(id string) (*entity.Product, error)
+	Update(product *entity.Product) error
+	Delete(id string) error
+	FindAll(page, limit int, sort string) ([]entity.Product, error)
+}
+
+```
+
+```sh
+# root/internal/infra/database/user_db.go
+package database
+
+import (
+	"github.com/sallescosta/crud-api/internal/entity"
+	"gorm.io/gorm"
+)
+
+type User struct {
+	DB *gorm.DB
+}
+
+func NewUser(db *gorm.DB) *User {
+	return &User{DB: db}
+}
+
+func (u *User) Create(user *entity.User) error {
+	return u.DB.Create(user).Error
+}
+
+func (u *User) FindByEmail(email string) (*entity.User, error) {
+
+	var user entity.User
+
+	err := u.DB.Where("email = ?", email).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+```
+
+```sh
+# root/internal/infra/database/user_db_test.go
+package database
+
+import (
+	"testing"
+
+	"github.com/sallescosta/crud-api/internal/entity"
+	"github.com/stretchr/testify/assert"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+)
+
+func TestCreateUser(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open("file::memory:"), &gorm.Config{})
+	if err != nil {
+		t.Error(err)
+	}
+
+	db.AutoMigrate(&entity.User{})
+	user, _ := entity.NewUser("John", "john@gmail.com", "123456")
+
+	userDB := NewUser(db)
+
+	err = userDB.Create(user)
+	assert.Nil(t, err)
+
+	var userFound entity.User
+	err = db.First(&userFound, "id = ?", user.ID).Error
+	assert.Nil(t, err)
+	assert.Equal(t, userFound.ID, user.ID)
+	assert.Equal(t, userFound.Name, user.Name)
+	assert.Equal(t, userFound.Email, user.Email)
+	assert.NotNil(t, userFound.Password)
+}
+
+func TestFindByEmail(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open("file::memory:"), &gorm.Config{})
+	if err != nil {
+		t.Error(err)
+	}
+
+	db.AutoMigrate(&entity.User{})
+	user, _ := entity.NewUser("John", "john@gmail.com", "123456")
+
+	userDB := NewUser(db)
+
+	err = userDB.Create(user)
+	assert.Nil(t, err)
+
+	userFound, err := userDB.FindByEmail(user.Email)
+	assert.Nil(t, err)
+	assert.Equal(t, userFound.ID, user.ID)
+	assert.Equal(t, userFound.Name, user.Name)
+	assert.Equal(t, userFound.Email, user.Email)
+	assert.NotNil(t, userFound.Password)
+}
+```
+
+```sh
+# root/internal/infra/database/product_db.go
+package database
+
+import (
+	"github.com/sallescosta/crud-api/internal/entity"
+	"gorm.io/gorm"
+)
+
+type Product struct {
+	DB *gorm.DB
+}
+
+func NewProduct(db *gorm.DB) *Product {
+	return &Product{DB: db}
+}
+
+func (p *Product) Create(product *entity.Product) error {
+	return p.DB.Create(product).Error
+}
+
+func (p *Product) FindById(id string) (*entity.Product, error) {
+	var product entity.Product
+
+	err := p.DB.Find(&product, "id = ?", id).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &product, nil
+}
+
+func (p *Product) Update(product *entity.Product) error {
+	_, err := p.FindById(product.ID.String())
+	if err != nil {
+		return err
+	}
+
+	return p.DB.Save(product).Error
+}
+
+func (p *Product) Delete(product *entity.Product) error {
+	_, err := p.FindById(product.ID.String())
+	if err != nil {
+		return err
+	}
+
+	return p.DB.Delete(product).Error
+}
+
+func (p *Product) FindAll(page, limit int, sort string) ([]entity.Product, error) {
+	var products []entity.Product
+	var err error
+	if sort != "" && sort != "asc" && sort != "desc" {
+		sort = "asc"
+	}
+
+	if page != 0 && limit != 0 {
+		err = p.DB.Limit(limit).Offset((page - 1) * limit).Order("created_at " + sort).Find(&products).Error
+	} else {
+		err = p.DB.Order("created_at " + sort).Find(&products).Error
+	}
+
+	return products, err
+}
+```
+## Integration tests for product_db
+
+```shell
+# root/internal/infra/database/product_db_test.go
+import (
+	"fmt"
+	"math/rand"
+	"testing"
+
+	"github.com/sallescosta/crud-api/internal/entity"
+	"github.com/stretchr/testify/assert"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+)
+
+var (
+	name    = "Product 1"
+	price   = 10.34
+	perPage = 10
+)
+
+func NewTestDB(t *testing.T) *gorm.DB {
+	db, err := gorm.Open(sqlite.Open("file::memory:"), &gorm.Config{})
+	if err != nil {
+		t.Error(err)
+	}
+
+	if err := db.AutoMigrate(&entity.Product{}); err != nil {
+		t.Error(err)
+	}
+
+	return db
+}
+
+func TestDeleteProduct(t *testing.T) {
+	db := NewTestDB(t)
+
+	product, err := entity.NewProduct(name, price)
+	assert.NoError(t, err)
+	db.Create(product)
+	productDB := NewProduct(db)
+
+	err = productDB.Delete(product.ID.String())
+	assert.NoError(t, err)
+
+	_, err = productDB.FindById(product.ID.String())
+	assert.Error(t, err)
+}
+
+func TestCreateNewProduct(t *testing.T) {
+	db := NewTestDB(t)
+
+	product, err := entity.NewProduct(name, price)
+	assert.Nil(t, err)
+
+	productDB := NewProduct(db)
+
+	err = productDB.Create(product)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, product.ID)
+}
+
+func TestFindAllProducts(t *testing.T) {
+	db := NewTestDB(t)
+
+	var precoSorteado = rand.Float64() * 100
+
+	for i := 1; i < 33; i++ {
+		product, err := entity.NewProduct(fmt.Sprintf("Produto %d", i), precoSorteado)
+		assert.NoError(t, err)
+		db.Create(product)
+	}
+
+	productDB := NewProduct(db)
+	products, err := productDB.FindAll(1, perPage, "asc")
+	assert.NoError(t, err)
+
+	assert.Len(t, products, perPage)
+	assert.Equal(t, "Produto 1", products[0].Name)
+	assert.Equal(t, "Produto 10", products[9].Name)
+
+	products, err = productDB.FindAll(2, perPage, "asc")
+	assert.NoError(t, err)
+	assert.Len(t, products, perPage)
+	assert.Equal(t, "Produto 11", products[0].Name)
+	assert.Equal(t, "Produto 20", products[9].Name)
+
+	products, err = productDB.FindAll(3, perPage, "asc")
+	assert.NoError(t, err)
+	assert.Len(t, products, perPage)
+	assert.Equal(t, "Produto 21", products[0].Name)
+	assert.Equal(t, "Produto 30", products[9].Name)
+
+	products, err = productDB.FindAll(4, perPage, "asc")
+	println(products)
+	assert.NoError(t, err)
+	assert.Len(t, products, 2)
+	assert.Equal(t, "Produto 31", products[0].Name)
+	assert.Equal(t, "Produto 32", products[1].Name)
+}
+
+func TestFindProductByID(t *testing.T) {
+	db := NewTestDB(t)
+
+	product, err := entity.NewProduct(name, price)
+	assert.NoError(t, err)
+
+	db.Create(product)
+	productDB := NewProduct(db)
+
+	product, err = productDB.FindById(product.ID.String())
+	assert.NoError(t, err)
+	assert.Equal(t, name, product.Name)
+	assert.Equal(t, price, product.Price)
+
+}
+
+func TestUpdateProduct(t *testing.T) {
+	db := NewTestDB(t)
+
+	product, err := entity.NewProduct(name, price)
+	assert.NoError(t, err)
+
+	db.Create(product)
+	productDB := NewProduct(db)
+
+	product.Name = "Produto 2"
+	err = productDB.Update(product)
+	assert.NoError(t, err)
+
+	product, err = productDB.FindById(product.ID.String())
+	assert.NoError(t, err)
+	assert.Equal(t, "Produto 2", product.Name)
+}
+
+```
+

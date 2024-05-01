@@ -19,13 +19,8 @@ func (p *Product) Create(product *entity.Product) error {
 
 func (p *Product) FindById(id string) (*entity.Product, error) {
 	var product entity.Product
-
-	err := p.DB.Find(&product, "id = ?", id).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return &product, nil
+	err := p.DB.First(&product, "id = ?", id).Error
+	return &product, err
 }
 
 func (p *Product) Update(product *entity.Product) error {
@@ -33,15 +28,27 @@ func (p *Product) Update(product *entity.Product) error {
 	if err != nil {
 		return err
 	}
-
 	return p.DB.Save(product).Error
 }
 
-func (p *Product) Delete(product *entity.Product) error {
-	_, err := p.FindById(product.ID.String())
+func (p *Product) FindAll(page, limit int, sort string) ([]entity.Product, error) {
+	var products []entity.Product
+	var err error
+	if sort != "" && sort != "asc" && sort != "desc" {
+		sort = "asc"
+	}
+	if page != 0 && limit != 0 {
+		err = p.DB.Limit(limit).Offset((page - 1) * limit).Order("created_at " + sort).Find(&products).Error
+	} else {
+		err = p.DB.Order("created_at " + sort).Find(&products).Error
+	}
+	return products, err
+}
+
+func (p *Product) Delete(id string) error {
+	product, err := p.FindById(id)
 	if err != nil {
 		return err
 	}
-
 	return p.DB.Delete(product).Error
 }
