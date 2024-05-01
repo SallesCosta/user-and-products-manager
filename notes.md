@@ -139,5 +139,110 @@ func TestUser_ValidatePassword(t *testing.T) {
 
 # Para rodar, tem que navegar até a pasta onde esta este arquivo (root/internal/entity) e rodar `go test`
 ```
+# Create Product entity and its test
+```sh
+# root/internal/entity/product.go
+package entity
 
+import (
+	"errors"
+	"time"
 
+	"github.com/sallescosta/crud-api/pkg/entity"
+)
+
+var (
+	ErrIDIsRequired    = errors.New("id is required")
+	ErrNameIsRequired  = errors.New("name is required")
+	ErrPriceIsRequired = errors.New("price is required")
+	ErrInvalidPrice    = errors.New("invalid price")
+	ErrInvalidId       = errors.New("invalid id")
+)
+
+type Product struct {
+	ID        entity.ID `json:"id"`
+	Name      string    `json:"name"`
+	Price     int       `json:"price"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+func (p *Product) Validate() error {
+	if p.ID.String() == "" {
+		return ErrIDIsRequired
+	}
+
+	if _, err := entity.ParseID(p.ID.String()); err != nil {
+		return ErrInvalidId
+	}
+	if p.Name == "" {
+		return ErrNameIsRequired
+	}
+	if p.Price == 0 {
+		return ErrPriceIsRequired
+	}
+	if p.Price < 0 {
+		return ErrInvalidPrice
+	}
+	return nil
+}
+
+func NewProduct(name string, price int) (*Product, error) {
+
+	product := &Product{
+		ID:        entity.NewID(),
+		Name:      name,
+		Price:     price,
+		CreatedAt: time.Now(),
+	}
+
+	err := product.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	return product, nil
+
+}
+
+```
+
+## product entity unity test
+```sh
+# root/internal/entity/product_test.go
+package entity
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestNewProduct(t *testing.T) {
+	product, err := NewProduct("book", 15)
+	assert.Nil(t, err)
+	assert.NotNil(t, product)
+	assert.Equal(t, "book", product.Name)
+	assert.Equal(t, 15, product.Price)
+	assert.NotEmpty(t, product.ID)
+	assert.NotEmpty(t, product.CreatedAt)
+	assert.Nil(t, product.Validate())
+}
+
+func TestProductValidations_Name(t *testing.T) {
+	product, err := NewProduct("", 15)
+	assert.Nil(t, product)
+	assert.Equal(t, err, ErrNameIsRequired)
+}
+
+func TestProductValidations_No_Price(t *testing.T) {
+	product, err := NewProduct("book", 0)
+	assert.Nil(t, product)
+	assert.Equal(t, err, ErrPriceIsRequired)
+}
+
+func TestProductValidations_Invalid_Price(t *testing.T) {
+	product, err := NewProduct("book", -15)
+	assert.Nil(t, product)
+	assert.Equal(t, err, ErrInvalidPrice)
+}
+```
