@@ -1,0 +1,54 @@
+### USERS ###############################
+
+POST http://localhost:8000/users/generate_token HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "cnovo_usuário@gmail.com",
+  "password": "954321"
+}
+
+###
+
+POST http://localhost:8000/users HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Usuáro C",
+  "email": "cnovo_usuário@gmail.com",
+  "password": "954321"
+}
+
+### PRODUCTS ###############################
+POST http://localhost:8000/products HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "novo teclado",
+  "price": 22
+}
+
+###
+
+GET http://localhost:8000/products/a2a83782-082b-4848-bbb4-3fbc670be06c HTTP/1.1
+Content-Type: application/json
+
+###
+
+PUT http://localhost:8000/products/a2a83782-082b-4848-bbb4-3fbc670be06c HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "headPhone S/Fio",
+  "price": 333
+}
+###
+
+DELETE http://localhost:8000/products/646136be-6681-4807-8bf2-a7d1c4666eae HTTP/1.1
+Content-Type: application/json
+
+###
+
+#GET http://localhost:8000/products/?page=1&limit=2&sort=desc HTTP/1.1
+GET http://localhost:8000/products/ HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTQ4MjM1MDYsInN1YiI6ImZlNWFiN2IxLWZkOGYtNGU4Yy04MDFhLTA2YTVmMTY2OTU0NCJ9.Oz7YaEEnKYkR0hCTFs8l6W4EPmeJC5R1SMOhjHUgB7s
