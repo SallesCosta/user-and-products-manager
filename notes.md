@@ -17,7 +17,7 @@ type conf struct {
 	DBName        string           `mapstrucutre:"DB_NAME"`
 	WebServerPort string           `mapstrucutre:"WEB_SERVER_PORT"`
 	JWTSecret     string           `mapstrucutre:"JWT_SECRET"`
-	SWTExpiresIn  int              `mapstrucutre:"SWT_EXPIRES_IN"`
+	JWTExpiresIn  int              `mapstrucutre:"JWT_EXPIRES_IN"`
 	TokenAuth     *jwtauth.JWTAuth `mapstrucutre:"TOKEN_AUTH"`
 }
 
@@ -565,4 +565,4 @@ func TestUpdateProduct(t *testing.T) {
 }
 
 ```
-
+## Criando Handlers

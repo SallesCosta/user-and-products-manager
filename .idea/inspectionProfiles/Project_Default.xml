@@ -5,6 +5,9 @@
       <functions>
         <function importPath="github.com/sallescosta/crud-api/internal/entity" name="NewProduct" />
       </functions>
+      <methods>
+        <method importPath="github.com/sallescosta/crud-api/internal/infra/database" receiver="UserInterface" name="FindByEmail" />
+      </methods>
     </inspection_tool>
     <inspection_tool class="GoUnhandledErrorResult" enabled="true" level="WARNING" enabled_by_default="true">
       <methods>

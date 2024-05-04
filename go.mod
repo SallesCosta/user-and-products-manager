@@ -3,6 +3,7 @@ module github.com/sallescosta/crud-api
 go 1.21.1
 
 require (
+	github.com/go-chi/chi v1.5.1
 	github.com/go-chi/jwtauth v1.2.0
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.8.4

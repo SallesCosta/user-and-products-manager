@@ -70,31 +70,31 @@ func TestFindAllProducts(t *testing.T) {
 	}
 
 	productDB := NewProduct(db)
-	products, err := productDB.FindAll(1, perPage, "asc")
+	response, err := productDB.FindAll(1, perPage, "asc")
 	assert.NoError(t, err)
 
-	assert.Len(t, products, perPage)
-	assert.Equal(t, "Produto 1", products[0].Name)
-	assert.Equal(t, "Produto 10", products[9].Name)
+	assert.Len(t, response.Products, perPage)
+	assert.Equal(t, "Produto 1", response.Products[0].Name)
+	assert.Equal(t, "Produto 10", response.Products[9].Name)
 
-	products, err = productDB.FindAll(2, perPage, "asc")
+	response, err = productDB.FindAll(2, perPage, "asc")
 	assert.NoError(t, err)
-	assert.Len(t, products, perPage)
-	assert.Equal(t, "Produto 11", products[0].Name)
-	assert.Equal(t, "Produto 20", products[9].Name)
+	assert.Len(t, response.Products, perPage)
+	assert.Equal(t, "Produto 11", response.Products[0].Name)
+	assert.Equal(t, "Produto 20", response.Products[9].Name)
 
-	products, err = productDB.FindAll(3, perPage, "asc")
+	response, err = productDB.FindAll(3, perPage, "asc")
 	assert.NoError(t, err)
-	assert.Len(t, products, perPage)
-	assert.Equal(t, "Produto 21", products[0].Name)
-	assert.Equal(t, "Produto 30", products[9].Name)
+	assert.Len(t, response.Products, perPage)
+	assert.Equal(t, "Produto 21", response.Products[0].Name)
+	assert.Equal(t, "Produto 30", response.Products[9].Name)
 
-	products, err = productDB.FindAll(4, perPage, "asc")
-	println(products)
+	response, err = productDB.FindAll(4, perPage, "asc")
+
 	assert.NoError(t, err)
-	assert.Len(t, products, 2)
-	assert.Equal(t, "Produto 31", products[0].Name)
-	assert.Equal(t, "Produto 32", products[1].Name)
+	assert.Len(t, response.Products, 2)
+	assert.Equal(t, "Produto 31", response.Products[0].Name)
+	assert.Equal(t, "Produto 32", response.Products[1].Name)
 }
 
 func TestFindProductByID(t *testing.T) {

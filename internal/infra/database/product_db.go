@@ -31,8 +31,23 @@ func (p *Product) Update(product *entity.Product) error {
 	return p.DB.Save(product).Error
 }
 
-func (p *Product) FindAll(page, limit int, sort string) ([]entity.Product, error) {
+func (p *Product) Delete(id string) error {
+	product, err := p.FindById(id)
+	if err != nil {
+		return err
+	}
+	return p.DB.Delete(product).Error
+}
+
+type ProductResponse struct {
+	Total    int
+	Products []entity.Product
+}
+
+func (p *Product) FindAll(page, limit int, sort string) (ProductResponse, error) {
+	var response ProductResponse
 	var products []entity.Product
+
 	var err error
 	if sort != "" && sort != "asc" && sort != "desc" {
 		sort = "asc"
@@ -42,13 +57,9 @@ func (p *Product) FindAll(page, limit int, sort string) ([]entity.Product, error
 	} else {
 		err = p.DB.Order("created_at " + sort).Find(&products).Error
 	}
-	return products, err
-}
 
-func (p *Product) Delete(id string) error {
-	product, err := p.FindById(id)
-	if err != nil {
-		return err
-	}
-	return p.DB.Delete(product).Error
+	response.Products = products
+	response.Total = len(products)
+
+	return response, err
 }
