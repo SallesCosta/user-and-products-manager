@@ -1,14 +1,21 @@
-# Users & Products manager
+ # Users & Products manager
 
 This project is a RESTful API for a simple CRUD (Create, Read, Update, Delete) system, built with Go.
 
 ## Technologies Used
-
+ 
+ <img src="./icons/go.svg" alt="go icon" width="100" height="100">
+ <img src="icons/chi.svg" alt="go icon" width="100" height="100">
+ <img src="icons/gorm.svg" alt="go icon" width="100" height="100">
+ <img src="./icons/sqlite.svg" alt="go icon" width="100" height="100">
+ <img src="./icons/swag.svg" alt="go icon" width="100" height="100">
+ 
 - [Go](https://golang.org/): Programming language used to develop the application.
 - [Chi](https://github.com/go-chi/chi): Lightweight and fast HTTP router for Go.
 - [GORM](https://gorm.io/): ORM (Object-Relational Mapping) in Go for database handling.
 - [SQLite](https://www.sqlite.org/index.html): Embedded SQL database system.
 - [Swaggo](https://github.com/swaggo/swag): API documentation tool for Go.
+
 
 ## Installation
 
