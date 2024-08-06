@@ -1,5 +1,9 @@
 ### USERS ###############################
 
+GET http://localhost:8000/users HTTP/1.1
+
+###
+
 POST http://localhost:8000/users/generate_token HTTP/1.1
 Content-Type: application/json
 
@@ -12,9 +16,10 @@ Content-Type: application/json
 
 POST http://localhost:8000/users HTTP/1.1
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTUwNzQ3MjUsInN1YiI6ImZlNWFiN2IxLWZkOGYtNGU4Yy04MDFhLTA2YTVmMTY2OTU0NCJ9.FWdbvhhWhyzhHipB8Wg_tNTiftF7ohT3l5yJdAhWlq8
 
 {
-  "name": "Usuáro C",
+  "name": "test..novo.. Usuáro C",
   "email": "cnovo_usuário@gmail.com",
   "password": "954321"
 }
@@ -51,4 +56,4 @@ Content-Type: application/json
 
 #GET http://localhost:8000/products/?page=1&limit=2&sort=desc HTTP/1.1
 GET http://localhost:8000/products/ HTTP/1.1
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTQ4MjM1MDYsInN1YiI6ImZlNWFiN2IxLWZkOGYtNGU4Yy04MDFhLTA2YTVmMTY2OTU0NCJ9.Oz7YaEEnKYkR0hCTFs8l6W4EPmeJC5R1SMOhjHUgB7s
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTQ4Mjc0MjQsInN1YiI6ImZlNWFiN2IxLWZkOGYtNGU4Yy04MDFhLTA2YTVmMTY2OTU0NCJ9.3iLdZD4ERgaF48qoUhLUjgzDIM5KzB1-9PPQ4vmxV5s

@@ -1,0 +1,19 @@
+basePath: /
+host: localhost:8000
+info:
+  contact:
+    email: newcapital.in@gmail.com
+    name: Eduardo Salles da Costa
+    url: http://www.github.com/sallescosta
+  description: This is a sample server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Crud - Users and Products API
+  version: "1.0"
+paths: {}
+securityDefinitions:
+  ApiKeyAuth:
+    type: basic
+swagger: "2.0"

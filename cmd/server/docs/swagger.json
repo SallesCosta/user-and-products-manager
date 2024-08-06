@@ -1,0 +1,26 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a sample server.",
+        "title": "Crud - Users and Products API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "Eduardo Salles da Costa",
+            "url": "http://www.github.com/sallescosta",
+            "email": "newcapital.in@gmail.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8000",
+    "basePath": "/",
+    "paths": {},
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "basic"
+        }
+    }
+}

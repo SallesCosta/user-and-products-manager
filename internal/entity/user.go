@@ -3,7 +3,7 @@ package entity
 import (
 	"log"
 
-	"github.com/sallescosta/crud-api/pkg/entity"
+	"github.com/sallescosta/user-and-products-manager/pkg/entity"
 	"golang.org/x/crypto/bcrypt"
 )
 

@@ -1,7 +1,7 @@
 package database
 
 import (
-	"github.com/sallescosta/crud-api/internal/entity"
+	"github.com/sallescosta/user-and-products-manager/internal/entity"
 	"gorm.io/gorm"
 )
 
@@ -18,7 +18,6 @@ func (u *User) Create(user *entity.User) error {
 }
 
 func (u *User) FindByEmail(email string) (*entity.User, error) {
-
 	var user entity.User
 
 	err := u.DB.Where("email = ?", email).First(&user).Error
@@ -27,4 +26,15 @@ func (u *User) FindByEmail(email string) (*entity.User, error) {
 	}
 
 	return &user, nil
+}
+
+func (u *User) GetAllUsers() ([]entity.User, error) {
+	var usersList []entity.User
+
+	err := u.DB.Find(&usersList).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return usersList, nil
 }

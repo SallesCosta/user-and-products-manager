@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/sallescosta/crud-api/pkg/entity"
+	"github.com/sallescosta/user-and-products-manager/pkg/entity"
 )
 
 var (

@@ -1,10 +1,11 @@
 package database
 
-import "github.com/sallescosta/crud-api/internal/entity"
+import "github.com/sallescosta/user-and-products-manager/internal/entity"
 
 type UserInterface interface {
 	Create(user *entity.User) error
 	FindByEmail(email string) (*entity.User, error)
+	GetAllUsers() ([]entity.User, error)
 }
 
 type ProductInterface interface {

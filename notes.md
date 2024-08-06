@@ -49,13 +49,13 @@ func LoadConfig(path string) (*conf, error) {
 ## Carrega as configurações no arquivo main
 
 ```sh
-# goot/cmd/server/main.go
+# root/cmd/server/main.go
 package main
 
 import (
 	"fmt"
 
-	"github.com/sallescosta/crud-api/configs"
+	"github.com/sallescosta/user-and-products-manager/configs"
 )
 
 func main() {
@@ -73,7 +73,7 @@ package entity
 import (
 	"log"
 
-	"github.com/sallescosta/crud-api/pkg/entity"
+	"github.com/sallescosta/user-and-products-manager/pkg/entity"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -85,8 +85,8 @@ type User struct {
 }
 
 func NewUser(name, email, password string) (*User, error) {
-
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
@@ -148,7 +148,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/sallescosta/crud-api/pkg/entity"
+	"github.com/sallescosta/user-and-products-manager/pkg/entity"
 )
 
 var (
@@ -253,7 +253,7 @@ func TestProductValidations_Invalid_Price(t *testing.T) {
 # root/internal/infra/database/interface.go
 package database
 
-import "github.com/sallescosta/crud-api/internal/entity"
+import "github.com/sallescosta/user-and-products-manager/internal/entity"
 
 type UserInterface interface {
 	Create(user *entity.User) error
@@ -275,7 +275,7 @@ type ProductInterface interface {
 package database
 
 import (
-	"github.com/sallescosta/crud-api/internal/entity"
+	"github.com/sallescosta/user-and-products-manager/internal/entity"
 	"gorm.io/gorm"
 )
 
@@ -311,7 +311,7 @@ package database
 import (
 	"testing"
 
-	"github.com/sallescosta/crud-api/internal/entity"
+	"github.com/sallescosta/user-and-products-manager/internal/entity"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -368,7 +368,7 @@ func TestFindByEmail(t *testing.T) {
 package database
 
 import (
-	"github.com/sallescosta/crud-api/internal/entity"
+	"github.com/sallescosta/user-and-products-manager/internal/entity"
 	"gorm.io/gorm"
 )
 
@@ -429,16 +429,18 @@ func (p *Product) FindAll(page, limit int, sort string) ([]entity.Product, error
 	return products, err
 }
 ```
+
 ## Integration tests for product_db
 
-```shell
+```sh
 # root/internal/infra/database/product_db_test.go
+
 import (
 	"fmt"
 	"math/rand"
 	"testing"
 
-	"github.com/sallescosta/crud-api/internal/entity"
+	"github.com/sallescosta/user-and-products-manager/internal/entity"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -565,4 +567,242 @@ func TestUpdateProduct(t *testing.T) {
 }
 
 ```
-## Criando Handlers
+
+# Criando Handlers (Produtos)
+
+- em `main.go` já deve haver a chamada para o método 
+`LoadConfig` e a criação do banco de
+dados (com ORM fazendo a migração das entities):
+
+```sh
+func main() {
+	config, _ := configs.LoadConfig(".")
+
+	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	if err != nil {
+		panic(err)
+	}
+
+	db.AutoMigrate(&entity.Product{}, &entity.User{})
+}
+
+```
+
+## Criação de DTOs (Não tem dependencia nenhuma..)
+
+```sh
+# root/internal/dto/dto.go
+
+package dto
+
+type CreateProductInput struct {
+	Name  string  `json:"name"`
+	Price float64 `json:"price"`
+}
+
+type CreateUserInput struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type GetJWTInput struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type GetJWTOutput struct {
+	AccessToken string `json:"access_token"`
+}
+
+type GetUsersOutput struct {
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
+```
+
+
+```sh
+# root/internal/infra/webserver/handlers/product_handlers.go
+type ProductHandler struct {
+	ProductDB database.ProductInterface
+}
+
+func NewProductHandler(db database.ProductInterface) *ProductHandler {
+	return &ProductHandler{
+		ProductDB: db,
+	}
+}
+
+func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
+	var product dto.CreateProductInput
+
+	err := json.NewDecoder(r.Body).Decode(&product)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	p, err := entity.NewProduct(product.Name, product.Price)  // isso normalmente não é bom. Não é normal que o handler saiba como criar uma entidade.
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err = h.ProductDB.Create(p)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	w.WriteHeader(http.StatusCreated)
+}
+// para testar, independente de roteador ou framework, é só usar um:
+// http.handleFunc("/products", h.CreateProduct)
+// http.ListenAndServe(":8000", nil)
+// e chmar num POST
+// para verificar no db (sqlite) se está ok, abre um outro terminal
+// e roda `sqlite3 cmd/server/test.db` e depois `select * from products;`
+```
+
+# Implementação do roteador (Chi)
+
+- com o roteador e os handlers, o código do `main.go` fica assim:
+
+```sh
+func main() {
+	config, _ := configs.LoadConfig(".")
+
+	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	if err != nil {
+		panic(err)
+	}
+
+	db.AutoMigrate(&entity.Product{}, &entity.User{})
+
+	productHandler := handlers.NewProductHandler(database.NewProduct(db))
+	userHandler := handlers.NewUserHandler(database.NewUser(db))
+
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.WithValue("jwt", config.TokenAuth))
+	r.Use(middleware.WithValue("JwtExpiresIn", config.JWTExpiresIn))
+
+	r.Use(LogRequest)
+
+	r.Route("/products", func(r chi.Router) {
+		r.Use(jwtauth.Verifier(config.TokenAuth))
+		r.Use(jwtauth.Authenticator)
+
+		r.Get("/", productHandler.GetProducts)
+		r.Post("/", productHandler.CreateProduct)
+		r.Get("/{id}", productHandler.GetProduct)
+		r.Put("/{id}", productHandler.UpdateProduct)
+		r.Delete("/{id}", productHandler.DeleteProduct)
+	})
+
+	r.Post("/users", userHandler.CreateUser)
+	r.Post("/users/generate_token", userHandler.GetJWT)
+	r.Get("/users", userHandler.AllUsers)
+
+	r.Route("/users", func(r chi.Router) {
+		r.Use(jwtauth.Verifier(config.TokenAuth))
+		r.Use(jwtauth.Authenticator)
+	})
+
+	http.HandleFunc("/products", productHandler.CreateProduct)
+
+	r.Get("/docs/*", httpSwagger.Handler(httpSwagger.URL("http://localhost:8000/docs/doc.json")))
+	log.Fatal(http.ListenAndServe(":8000", r))
+}
+```
+
+# Gerando JWT
+
+- os jwt estão associados aos usuários, então deve ter jwt na interface do usuário
+```sh
+# root/internal/infra/webserver/handlers/user_handlers.go
+
+import "github.com/go-chi/jwtauth"
+
+type UserHandler struct {
+	UserDB       database.UserInterface
+	Jwt          *jwtauth.JWTAuth
+	JwtExpiresIn int
+}
+
+```
+
+- Package publico de geração de JWT
+
+```sh
+# root/pkg/jwt/jwt.go
+package entity
+
+import (
+	"github.com/google/uuid"
+)
+
+type ID = uuid.UUID
+
+func NewID() ID {
+	return ID(uuid.New())
+}
+
+func ParseID(s string) (ID, error) {
+	id, err := uuid.Parse(s)
+	return ID(id), err
+}
+```
+
+- Criar o handler GetJwt
+// tem que ter o dto pronto (dto.GetJWTInput)
+// 
+
+```sh
+# root/internal/infra/webserver/handlers/user_handlers.go
+func (h *UserHandler) GetJWT(w http.ResponseWriter, r *http.Request) {
+	jwt := r.Context().Value("jwt").(*jwtauth.JWTAuth)
+	jwtExpiresIn := r.Context().Value("JwtExpiresIn").(int)
+
+// serializa o body
+	var user dto.GetJWTInput
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// verifica se o usuário existe
+	u, err := h.UserDB.FindByEmail(user.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		err := Error{Message: err.Error()}
+		json.NewEncoder(w).Encode(err)
+	}
+
+	// se chegou aqui, o usuário existe, então verifica a senha
+	if !u.ValidatePassword(user.Password) {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	m := map[string]interface{}{
+		"sub": u.ID.String(),
+		"exp": time.Now().Add(time.Second * time.Duration(jwtExpiresIn)).Unix(),
+	}
+	_, tokenString, _ := jwt.Encode(m)
+
+	accessToken := dto.GetJWTOutput{AccessToken: tokenString}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(w).Encode(accessToken)
+	if err != nil {
+		return
+	}
+}
+
+
+
+```

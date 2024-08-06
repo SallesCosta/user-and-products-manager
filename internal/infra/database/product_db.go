@@ -1,7 +1,7 @@
 package database
 
 import (
-	"github.com/sallescosta/crud-api/internal/entity"
+	"github.com/sallescosta/user-and-products-manager/internal/entity"
 	"gorm.io/gorm"
 )
 
@@ -40,8 +40,8 @@ func (p *Product) Delete(id string) error {
 }
 
 type ProductResponse struct {
-	Total    int
-	Products []entity.Product
+	Total    int              `json:"total"`
+	Products []entity.Product `json:"products"`
 }
 
 func (p *Product) FindAll(page, limit int, sort string) (ProductResponse, error) {
@@ -52,6 +52,7 @@ func (p *Product) FindAll(page, limit int, sort string) (ProductResponse, error)
 	if sort != "" && sort != "asc" && sort != "desc" {
 		sort = "asc"
 	}
+
 	if page != 0 && limit != 0 {
 		err = p.DB.Limit(limit).Offset((page - 1) * limit).Order("created_at " + sort).Find(&products).Error
 	} else {
