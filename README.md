@@ -4,11 +4,7 @@ This project is a RESTful API for a simple CRUD (Create, Read, Update, Delete) s
 
 ## Technologies Used
  
- <img src="./icons/go.svg" alt="go icon" width="100" height="100">
- <img src="icons/chi.svg" alt="go icon" width="100" height="100">
- <img src="icons/gorm.svg" alt="go icon" width="100" height="100">
- <img src="./icons/sqlite.svg" alt="go icon" width="100" height="100">
- <img src="./icons/swag.svg" alt="go icon" width="100" height="100">
+ <img src="./icons/go.svg" alt="go icon" width="100" height="100"> <img src="icons/chi.svg" alt="go icon" width="100" height="100"> <img src="icons/gorm.svg" alt="go icon" width="100" height="100"> <img src="./icons/sqlite.svg" alt="go icon" width="100" height="100"> <img src="./icons/swag.svg" alt="go icon" width="100" height="100">
  
 - [Go](https://golang.org/): Programming language used to develop the application.
 - [Chi](https://github.com/go-chi/chi): Lightweight and fast HTTP router for Go.
